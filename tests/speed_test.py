@@ -21,7 +21,7 @@ class ModelTestCase(unittest.TestCase):
             for child_cnt in range(1, 100):
                 entity: dict = model.init({})
                 entity_uuid = entity['uuid']
-                entity['name'] = 'entity_' + str(parent_cnt)
+                entity['name'] = 'entity_' + str(child_cnt)
                 for attribute_cnt in range(1, 50):
                     entity["attribute_" + str(attribute_cnt)] = 'e_' + str(child_cnt) + '_attribute_' + str(attribute_cnt)
                 model.create(parent_uuid, entity)

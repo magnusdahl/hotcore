@@ -1,13 +1,10 @@
 """ Entity model for the core dataset of an application. The structural, referential, ever changing dataset
 
-Leave one blank line.  The rest of this docstring should contain an
-overall description of the module or program.  Optionally, it may also
-contain a brief description of exported classes and functions and/or usage
-examples.
+This module will manage a dataset in Redis with a tree structure
 
   Typical usage example:
 
-  foo = ClassFoo()
+  entity: dict = dict()
   bar = foo.FunctionBar()
 """
 import uuid
@@ -58,6 +55,7 @@ class Model:
             # Add this entity into the child list of the parent
             pipe.sadd('c:' + parent_uuid, entity_uuid)
             pipe.execute()
+            return entity
 
     ##
     # Retrieve the entity for the given uuid
@@ -156,19 +154,35 @@ class Model:
                     # our best bet is to just retry.
                     continue
 
-    def find(self, key: str, value: str):
-        print('find:' + key + ' = ' + value)
-        for hit in list(self._redisClient.scan_iter('i:' + key + ':' + value)):
-            for entity_uuid in self._redisClient.smembers(hit):
-                entity_key = 'e:' + entity_uuid
-                entity: dict = self._redisClient.hgetall(entity_key)
-                entity['uuid'] = entity_uuid
-                yield entity
-
     def get_entity_from_index(self, index_hit: str):
         print('Index lookup:' + index_hit)
         print('Index hit:' + str(self._redisClient.smembers(index_hit)))
         for entity_uuid in self._redisClient.smembers(index_hit):
+            entity_key = 'e:' + entity_uuid
+            entity: dict = self._redisClient.hgetall(entity_key)
+            entity['uuid'] = entity_uuid
+            yield entity
+
+    def find(self, *args, **kwargs):
+        filter_list = []
+        for key in kwargs.keys():
+            value = kwargs.get(key)
+            if key == 'parent':
+                filter_list.append('c:' + value)
+            elif '*' in value or '?' in value or '[' in value:
+                matching_keys = list(self._redisClient.scan_iter('i:' + key + ':' + value, count=1000))
+                matching_key_set_name = 'u:' + str(uuid.uuid4())
+                print(matching_keys)
+                print(matching_key_set_name)
+                self._redisClient.sunionstore(matching_key_set_name, matching_keys)
+                self._redisClient.expire(matching_key_set_name, 60)
+                filter_list.append(matching_key_set_name)
+            else:
+                filter_list.append('i:' + key + ':' + value)
+
+        print('filter list:' + str(filter_list))
+        for entity_uuid in self._redisClient.sinter(filter_list):
+            print('Hit:' + entity_uuid)
             entity_key = 'e:' + entity_uuid
             entity: dict = self._redisClient.hgetall(entity_key)
             entity['uuid'] = entity_uuid

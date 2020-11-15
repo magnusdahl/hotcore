@@ -9,8 +9,10 @@ class ModelTestCase(unittest.TestCase):
         model = Model('localhost')
 
         start_time = datetime.now().timestamp()
-        print(list(model.find('attribute_1', 'p_8?_attribute_1')))
-        print(list(model.get_entity_from_index('i:attribute_2:p_80_attribute_2')))
+        parent = list(model.find(name='parent_2'))[0]
+        #print("Li*:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_8?_attribute_1'))))
+        print("Li*:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_87_attribute_1'))))
+
         for entity in model.get_children('parent1'):
             print(entity)
             break
