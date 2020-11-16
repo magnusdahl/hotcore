@@ -1,6 +1,8 @@
+import logging
 import unittest
 from hotcore.model import Model
 
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class ModelTestCase(unittest.TestCase):
     def test_example(self):

@@ -1,24 +1,20 @@
+import logging
 import time
 from datetime import datetime
 import unittest
 from hotcore.model import Model
 
+logging.basicConfig(format='%(asctime)s %(levelname)s [%(name)s] %(message)s', level=logging.DEBUG)
 
 class ModelTestCase(unittest.TestCase):
     def test_search(self):
         model = Model('localhost')
 
         start_time = datetime.now().timestamp()
-        parent = list(model.find(name='parent_2'))[0]
-        #print("Li*:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_8?_attribute_1'))))
-        print("Li*:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_87_attribute_1'))))
-
-        for entity in model.get_children('parent1'):
-            print(entity)
-            break
-
-        parent = model.get_parent(entity['uuid'])
-        print('parent:' + str(parent))
+        parent = list(model.find(name='parent_233'))[0]
+        # print("Wildcard search:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_8?_attribute_1'))))
+        print("Multiple wildcard search:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_4?_attribute_1', attribute_2='e_8?_attribute_2'))))
+        # print("Fixed value search:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_87_attribute_1'))))
 
         end_time = datetime.now().timestamp()
         print('Start:' + str(start_time))

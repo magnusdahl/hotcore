@@ -1,8 +1,10 @@
+import logging
 import time
 from datetime import datetime
 import unittest
 from hotcore.model import Model
 
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class ModelTestCase(unittest.TestCase):
     def test_load(self):
@@ -18,7 +20,7 @@ class ModelTestCase(unittest.TestCase):
                 parent["attribute_" + str(attribute_cnt)] = 'p_' + str(parent_cnt) + '_attribute_' + str(attribute_cnt)
             model.create('parent1', parent)
 
-            for child_cnt in range(1, 100):
+            for child_cnt in range(1, 50):
                 entity: dict = model.init({})
                 entity_uuid = entity['uuid']
                 entity['name'] = 'entity_' + str(child_cnt)

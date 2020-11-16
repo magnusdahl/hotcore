@@ -7,12 +7,14 @@ This module will manage a dataset in Redis with a tree structure
   entity: dict = dict()
   bar = foo.FunctionBar()
 """
+import logging
 import uuid
 import redis
 from redis import WatchError
 
 
 class Model:
+    logger = logging.getLogger('hotcore.model')
     _redisClient: redis.client = redis.Redis('localhost', port=6379, db=0, encoding='utf-8', decode_responses=True)
 
     def __init__(self, host: str):
@@ -171,12 +173,22 @@ class Model:
                 filter_list.append('c:' + value)
             elif '*' in value or '?' in value or '[' in value:
                 matching_keys = list(self._redisClient.scan_iter('i:' + key + ':' + value, count=1000))
-                matching_key_set_name = 'u:' + str(uuid.uuid4())
-                print(matching_keys)
-                print(matching_key_set_name)
-                self._redisClient.sunionstore(matching_key_set_name, matching_keys)
-                self._redisClient.expire(matching_key_set_name, 60)
-                filter_list.append(matching_key_set_name)
+                if len(matching_keys) > 0:
+                    matching_key_set_name = 'u:' + str(uuid.uuid4())
+                    print(matching_keys)
+                    print(matching_key_set_name)
+                    union_entity_cnt = self._redisClient.sunionstore(matching_key_set_name, matching_keys)
+                    self._redisClient.expire(matching_key_set_name, 60)
+                    if union_entity_cnt > 0:
+                        filter_list.append(matching_key_set_name)
+                    else:
+                        # No matching keys = no result
+                        self.logger.debug('No matching keys:' + key + '=' + value)
+                        return filter_list
+                else:
+                    # No matching keys = no result
+                    self.logger.debug('No entities in matching keys:' + key + '=' + value)
+                    return filter_list
             else:
                 filter_list.append('i:' + key + ':' + value)
 
