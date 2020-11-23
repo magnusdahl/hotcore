@@ -14,7 +14,7 @@ from redis import WatchError
 
 
 class Model:
-    logger = logging.getLogger('hotcore.model')
+    logger = logging.getLogger(__name__)
     _redisClient: redis.client = redis.Redis('localhost', port=6379, db=0, encoding='utf-8', decode_responses=True)
 
     def __init__(self, host: str):

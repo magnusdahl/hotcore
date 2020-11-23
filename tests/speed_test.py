@@ -4,7 +4,7 @@ from datetime import datetime
 import unittest
 from hotcore.model import Model
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(levelname)s [%(name)s] %(message)s', level=logging.DEBUG)
 
 class ModelTestCase(unittest.TestCase):
     def test_load(self):
