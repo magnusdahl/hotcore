@@ -24,11 +24,11 @@ class Model:
         self._redisClient.flushall()
 
     @staticmethod
-    def init(entity: dict):
+    def init(entity: dict[str, str]) -> dict[str, str]:
         entity.__setitem__('uuid', str(uuid.uuid4()))
         return entity
 
-    def create(self, parent_uuid: str, entity: dict):
+    def create(self, parent_uuid: str, entity: dict[str, str]) -> dict[str, str]:
         """Create and save a new entity into the structure.
 
          Saving the entity and updating the parent to reflect the added child
@@ -77,7 +77,7 @@ class Model:
     # apply.
     # @return An integer value.
 
-    def apply(self, change: dict):
+    def apply(self, change: dict[str, str]):
         entity_uuid: str = change['uuid']
         watch_key = 'w:' + entity_uuid
         entity_key = 'e:' + entity_uuid
@@ -118,7 +118,7 @@ class Model:
                     # our best bet is to just retry.
                     continue
 
-    def delete(self, entity: dict):
+    def delete(self, entity: dict[str, str]):
         entity_uuid: str = entity['uuid']
         with self._redisClient.pipeline() as pipe:
             while True:

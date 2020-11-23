@@ -13,7 +13,7 @@ class ModelTestCase(unittest.TestCase):
         model = Model('localhost')
 
         start_time = datetime.now().timestamp()
-        parent = list(model.find(name='parent_233'))[0]
+        parent = list(model.find(name='parent_23'))[0]
         # print("Wildcard search:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_8?_attribute_1'))))
         print('Multiple wildcard search:' + str(list(model.find(parent=parent['uuid'], attribute_1='e_4?_attribute_1', attribute_2='e_4?_attribute_2'))))
         # print("Fixed value search:" + str(list(model.find(parent=parent['uuid'], attribute_1='e_87_attribute_1'))))

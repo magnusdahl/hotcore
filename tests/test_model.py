@@ -11,7 +11,7 @@ class ModelTestCase(unittest.TestCase):
         # Clean full dataset
         model.flush_all()
 
-        group1 = model.init({})
+        group1: dict[str, str] = model.init({})
         group1['type'] = 'dept'
         group1['name'] = 'First Dept'
         group1['address1'] = 'First Street 2'

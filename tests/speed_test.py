@@ -12,8 +12,8 @@ class ModelTestCase(unittest.TestCase):
         model.flush_all()
 
         start_time = datetime.now().timestamp()
-        for parent_cnt in range(1, 1000):
-            parent: dict = model.init({})
+        for parent_cnt in range(1, 100):
+            parent: dict[str, str] = model.init({})
             parent_uuid = parent['uuid']
             parent['name'] = 'parent_' + str(parent_cnt)
             for attribute_cnt in range(1, 50):
@@ -21,7 +21,7 @@ class ModelTestCase(unittest.TestCase):
             model.create('parent1', parent)
 
             for child_cnt in range(1, 50):
-                entity: dict = model.init({})
+                entity: dict[str, str] = model.init({})
                 entity_uuid = entity['uuid']
                 entity['name'] = 'entity_' + str(child_cnt)
                 for attribute_cnt in range(1, 50):
