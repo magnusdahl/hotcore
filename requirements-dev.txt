@@ -1,0 +1,8 @@
+-r requirements.txt
+pytest
+black
+isort
+mypy
+flake8
+build
+twine 

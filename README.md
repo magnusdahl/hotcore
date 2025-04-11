@@ -26,13 +26,19 @@ Hotcore provides a clean, Redis-backed data model for applications that need hie
 
 1. Install the package:
 ```bash
-# From source
+# From PyPI (minimal installation)
+pip install hotcore
+
+# For development with all tools
+pip install -r requirements-dev.txt
+
+# From source (minimal installation)
 git clone https://github.com/your-org/hotcore.git
 cd hotcore
 pip install -e .
 
-# OR via pip once published
-pip install hotcore
+# Development installation with all tools
+pip install -e ".[dev]"
 ```
 
 2. Make sure Redis is running:
