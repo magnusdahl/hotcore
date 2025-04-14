@@ -199,6 +199,53 @@ for entity in model.find(type='user', status='active', role='admin'):
 3. **Optimistic Locking**: Helps maintain data consistency with minimal performance impact
 4. **Temporary Sets**: Complex searches using wildcards create temporary sets that expire after 60 seconds
 
+## Testing
+
+Hotcore's test suite is designed to work without requiring a Redis server for most tests. We use fakeredis to simulate Redis functionality for unit and integration tests.
+
+### Running Tests
+
+```bash
+# Quick way to run tests without Redis server
+./run_fakeredis_tests.sh
+
+# If you have Redis server and want to run all tests
+./run_real_redis_tests.sh
+```
+
+#### With Conda Environment
+
+```bash
+# Use the conda Python with fakeredis tests
+.conda/bin/python -m pytest tests/unit/ tests/integration/
+
+# Run all tests including those requiring Redis
+USE_REAL_REDIS=true .conda/bin/python -m pytest
+```
+
+#### With System Python
+
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Run tests that don't require Redis
+python -m pytest tests/unit/ tests/integration/
+
+# Run all tests including those requiring Redis
+USE_REAL_REDIS=true python -m pytest
+```
+
+### Test Organization
+
+The tests are organized to minimize Redis server dependencies:
+
+- `tests/unit/` - Unit tests (no Redis server needed, uses fakeredis)
+- `tests/integration/` - Integration tests (no Redis server needed, uses fakeredis)
+- `tests/real_redis/` - Tests that require a real Redis server (skipped by default)
+
+For more details, see the [tests README](tests/README.md).
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

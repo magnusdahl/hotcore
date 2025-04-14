@@ -25,6 +25,7 @@ setup(
     extras_require={
         "dev": [
             "pytest",
+            "fakeredis",
             "black",
             "isort",
             "mypy",
