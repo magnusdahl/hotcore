@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hotcore"
+dynamic = ["version"]
+description = "A Redis-based hierarchical entity model for application data management"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Magnus Dahl", email = "magnus.dahl@consistis.com" },
+]
+keywords = ["redis", "data-model", "geospatial", "hierarchical"]
+dependencies = [
+    "redis",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "fakeredis",
+    "black",
+    "isort",
+    "mypy",
+    "flake8",
+    "build",
+    "twine",
+]
+h3 = [
+    "h3",
+]
+
+[project.urls]
+Homepage = "https://github.com/Consistis-R-D/hotcore"
+Repository = "https://github.com/Consistis-R-D/hotcore"
+
+[tool.setuptools.dynamic]
+version = { attr = "hotcore._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hotcore*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
