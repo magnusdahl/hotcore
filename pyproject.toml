@@ -7,7 +7,7 @@ name = "hotcore"
 dynamic = ["version"]
 description = "A Redis-based hierarchical entity model for application data management"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
     { name = "Magnus Dahl", email = "magnus.dahl@consistis.com" },
@@ -19,6 +19,7 @@ dependencies = [
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -52,7 +53,7 @@ include = ["hotcore*"]
 
 [tool.black]
 line-length = 88
-target-version = ["py313"]
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"
