@@ -9,7 +9,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md). By participati
 ## Development Environment
 
 1. **Prerequisites**
-   - Python 3.13+
+   - Python 3.10+
    - Redis (local or remote) if you plan to run integration tests against a live server
    - `make`, `git`, and a C compiler if you plan to install optional dependencies from source
 
@@ -23,7 +23,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md). By participati
 3. **Create a virtual environment**
 
    ```bash
-   python3.13 -m venv .venv
+   python3.10 -m venv .venv
    source .venv/bin/activate
    ```
 

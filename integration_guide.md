@@ -4,7 +4,7 @@ This guide shows you how to integrate the hotcore module into your Python applic
 
 ## Prerequisites
 
-- Python 3.13+
+- Python 3.10+
 - Redis server running (local or remote)
 - hotcore module (built and ready)
 

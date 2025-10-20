@@ -20,7 +20,7 @@ Hotcore provides a clean, Redis-backed data model for applications that need hie
 
 ### Prerequisites
 
-- Python 3.13+
+- Python 3.10+
 - Redis server (local or remote)
 
 ### Setup
