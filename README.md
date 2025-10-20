@@ -15,12 +15,14 @@ Hotcore provides a clean, Redis-backed data model for applications that need hie
 - **Automatic Indexing**: All entity attributes are automatically indexed for fast retrieval
 - **Type Hinting**: Comprehensive type annotations for improved IDE support
 - **Error Handling**: Robust error handling with informative messages
+- **TLS-Ready Connections**: Flexible SSL/TLS configuration with custom contexts and connection parameters
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.10+
+- redis-py 5.0.4 or newer
 - Redis server (local or remote)
 
 ### Setup
@@ -107,6 +109,27 @@ for child in model.get_children(root['uuid']):
 parent = model.get_parent(child['uuid'])
 print(parent)
 ```
+
+### TLS / SSL configuration
+
+`RedisConnectionManager` and the `Model` facade now accept custom TLS settings. Supply an `ssl.SSLContext` or explicit `connection_kwargs` to match your Redis deployment:
+
+```python
+import ssl
+from hotcore import Model
+
+tls_context = ssl.create_default_context()
+tls_context.load_verify_locations("/etc/ssl/certs/redis-ca.pem")
+
+secure_model = Model(
+    host="redis.example.com",
+    port=6380,
+    ssl_context=tls_context,
+    connection_kwargs={"ssl_check_hostname": True},
+)
+```
+
+You can also provide `write_connection_kwargs` (and `write_ssl_context`) if your write path needs a different configuration than reads.
 
 ## Project Structure
 

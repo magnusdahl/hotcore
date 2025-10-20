@@ -16,7 +16,7 @@ If you have the built wheel file:
 
 ```bash
 # From your application directory
-pip install /path/to/hotcore/dist/hotcore-1.1.0-py3-none-any.whl
+pip install /path/to/hotcore/dist/hotcore-1.2.1-py3-none-any.whl
 ```
 
 ### Method 2: Install in Editable Mode
@@ -45,6 +45,25 @@ pip install git+https://github.com/yourusername/hotcore.git
 ```
 
 ## Usage in Your Application
+
+### TLS-aware connections
+
+When deploying against managed Redis offerings that require TLS, provide an `ssl.SSLContext` and optional `connection_kwargs`:
+
+```python
+import ssl
+from hotcore import Model
+
+context = ssl.create_default_context()
+context.load_verify_locations("/path/to/redis-ca.pem")
+
+model = Model(
+    host="redis.example.com",
+    port=6380,
+    ssl_context=context,
+    connection_kwargs={"ssl_check_hostname": True},
+)
+```
 
 ### Basic Import
 

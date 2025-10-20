@@ -22,7 +22,7 @@ We aim to acknowledge vulnerability reports within **2 business days** and provi
 ## Security Best Practices
 
 - Always run tests with a clean Redis database; the test suite flushes data automatically but double-check your configuration when using a shared instance.
-- Use TLS/SSL when connecting to Redis in production. The `RedisConnectionManager` supports enabling SSL with certificate verification.
+- Use TLS/SSL when connecting to Redis in production. The `RedisConnectionManager` now accepts an `ssl.SSLContext` and explicit `connection_kwargs` for fine-grained certificate verification.
 - Consider enabling Redis authentication and network-level protections (firewalls, VPNs, security groups) when deploying.
 
 Thank you for helping keep the project and its users safe!

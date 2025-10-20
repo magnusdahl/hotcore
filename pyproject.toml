@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["redis", "data-model", "geospatial", "hierarchical"]
 dependencies = [
-    "redis",
+    "redis>=5.0.4",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

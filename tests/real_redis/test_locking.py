@@ -6,6 +6,8 @@ Requires a real Redis server.
 """
 
 import logging
+import os
+import ssl
 import threading
 import time
 import uuid
@@ -18,6 +20,58 @@ from hotcore import EntityStorage, Model, RedisConnectionManager
 logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s", level=logging.DEBUG
 )
+
+
+def _connection_settings():
+    """Return connection parameters factoring in TLS environment configuration."""
+    host = os.environ.get("REDIS_HOST", "localhost")
+    port = int(os.environ.get("REDIS_PORT", "6379"))
+    use_tls = os.environ.get("REDIS_USE_TLS", "").lower() in ("true", "1", "t")
+
+    tls_context = None
+    connection_kwargs = None
+
+    if use_tls:
+        tls_context = ssl.create_default_context()
+        ca_cert = os.environ.get("REDIS_TLS_CA_CERT")
+        if ca_cert:
+            tls_context.load_verify_locations(ca_cert)
+        client_cert = os.environ.get("REDIS_TLS_CLIENT_CERT")
+        client_key = os.environ.get("REDIS_TLS_CLIENT_KEY")
+        if client_cert and client_key:
+            tls_context.load_cert_chain(client_cert, client_key)
+
+        tls_check_hostname = (
+            os.environ.get("REDIS_TLS_CHECK_HOSTNAME", "false").lower()
+            in ("true", "1", "t")
+        )
+        connection_kwargs = {"ssl_check_hostname": tls_check_hostname}
+
+    return host, port, tls_context, connection_kwargs
+
+
+def _new_model():
+    host, port, tls_context, connection_kwargs = _connection_settings()
+    return Model(
+        host=host,
+        port=port,
+        ssl_context=tls_context,
+        connection_kwargs=connection_kwargs,
+        write_host=host,
+        write_port=port,
+        write_ssl_context=tls_context,
+        write_connection_kwargs=connection_kwargs,
+    )
+
+
+def _new_connection_manager():
+    host, port, tls_context, connection_kwargs = _connection_settings()
+    return RedisConnectionManager(
+        host=host,
+        port=port,
+        ssl_context=tls_context,
+        connection_kwargs=connection_kwargs,
+    )
 
 
 @pytest.mark.redis_required
@@ -44,7 +98,7 @@ class TestLockingMechanism:
 
         def update_entity():
             # Create a new model instance for this thread
-            thread_model = Model(host="localhost")
+            thread_model = _new_model()
 
             try:
                 # Read current value
@@ -145,7 +199,7 @@ class TestLockingMechanism:
 
         def delete_entity():
             # Create a new model instance for this thread
-            thread_model = Model(host="localhost")
+            thread_model = _new_model()
 
             try:
                 # Get the entity data
@@ -246,7 +300,7 @@ class TestLockingMechanism:
     def test_locking_with_custom_implementation(self, model):
         """Test the locking mechanism directly using the RedisConnectionManager and EntityStorage classes."""
         # Create a connection manager and storage instance
-        conn_manager = RedisConnectionManager(host="localhost")
+        conn_manager = _new_connection_manager()
         storage = EntityStorage(conn_manager)
 
         # Create a test entity

@@ -47,10 +47,10 @@ Before publishing, it's a good idea to verify the package by installing it local
 
 ```bash
 # Install from the wheel file
-pip install dist/hotcore-1.1.0-py3-none-any.whl
+    pip install dist/hotcore-1.2.1-py3-none-any.whl
 
 # Or install from the source distribution
-pip install dist/hotcore-1.1.0.tar.gz
+    pip install dist/hotcore-1.2.1.tar.gz
 ```
 
 Then run some basic imports to verify it works:

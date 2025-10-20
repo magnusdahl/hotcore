@@ -3,12 +3,27 @@
 from __future__ import annotations
 
 import logging
+import ssl
 import uuid
-from typing import Any
+from typing import Any, Mapping, MutableMapping
 
 import redis
 
 __all__ = ["RedisConnectionManager"]
+
+
+class _ContextSSLConnection(redis.SSLConnection):
+    """Redis SSL connection variant that honours a provided ssl.SSLContext."""
+
+    def __init__(self, *args: Any, ssl_context: ssl.SSLContext | None = None, **kwargs: Any) -> None:  # type: ignore[override]
+        self._ssl_context = ssl_context
+        super().__init__(*args, **kwargs)
+
+    def _wrap_socket_with_ssl(self, sock):  # type: ignore[override]
+        if self._ssl_context is not None:
+            server_hostname = self.host if self.check_hostname else None
+            return self._ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+        return super()._wrap_socket_with_ssl(sock)
 
 
 class RedisConnectionManager:
@@ -34,9 +49,12 @@ class RedisConnectionManager:
         db: int = 0,
         ssl: bool = False,
         ssl_cert_reqs: str = "required",
+        *,
+        ssl_context: ssl.SSLContext | None = None,
+        connection_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize the Redis/ValKey connection manager."""
-        connection_kwargs = {
+        base_kwargs: dict[str, Any] = {
             "host": host,
             "port": port,
             "db": db,
@@ -47,13 +65,59 @@ class RedisConnectionManager:
             "health_check_interval": 30,
         }
 
-        if ssl:
-            connection_kwargs["ssl"] = True
-            connection_kwargs["ssl_cert_reqs"] = ssl_cert_reqs
-            # ElastiCache Serverless compatibility.
-            connection_kwargs["ssl_check_hostname"] = False
+        extra_kwargs: MutableMapping[str, Any] = (
+            dict(connection_kwargs) if connection_kwargs else {}
+        )
 
-        self._pool = redis.ConnectionPool(**connection_kwargs)
+        user_ssl_flag = bool(ssl or extra_kwargs.pop("ssl", False))
+
+        tls_marker_keys = {
+            "ssl_certfile",
+            "ssl_keyfile",
+            "ssl_cert_reqs",
+            "ssl_ca_certs",
+            "ssl_ca_path",
+            "ssl_ca_data",
+            "ssl_check_hostname",
+            "ssl_password",
+            "ssl_validate_ocsp",
+            "ssl_validate_ocsp_stapled",
+            "ssl_ocsp_context",
+            "ssl_ocsp_expected_cert",
+            "ssl_min_version",
+            "ssl_ciphers",
+        }
+
+        tls_requested = (
+            user_ssl_flag
+            or ssl_context is not None
+            or any(key in extra_kwargs for key in tls_marker_keys)
+        )
+
+        existing_connection_class = extra_kwargs.get("connection_class")
+        if existing_connection_class:
+            try:
+                connection_class_is_ssl = issubclass(
+                    existing_connection_class, redis.SSLConnection  # type: ignore[arg-type]
+                )
+            except TypeError:
+                connection_class_is_ssl = False
+            tls_requested = tls_requested or connection_class_is_ssl
+
+        if tls_requested:
+            if ssl_context is not None:
+                extra_kwargs["connection_class"] = _ContextSSLConnection
+                extra_kwargs["ssl_context"] = ssl_context
+            else:
+                extra_kwargs.setdefault("connection_class", redis.SSLConnection)
+
+            extra_kwargs.setdefault("ssl_cert_reqs", ssl_cert_reqs)
+            # ElastiCache Serverless compatibility.
+            extra_kwargs.setdefault("ssl_check_hostname", False)
+
+        base_kwargs.update(extra_kwargs)
+
+        self._pool = redis.ConnectionPool(**base_kwargs)
 
     def get_client(self) -> redis.Redis:
         """Return a Redis client that uses the configured connection pool."""

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import ssl
 import uuid
-from typing import Any, Dict, Generator, Iterable, List, Optional
+from typing import Any, Dict, Generator, Iterable, List, Mapping, Optional
 
 from ._optional import H3_AVAILABLE
 from .connection import RedisConnectionManager
@@ -31,16 +32,50 @@ class Model:
         ssl_cert_reqs: str = "required",
         write_host: Optional[str] = None,
         write_port: Optional[int] = None,
+        *,
+        ssl_context: ssl.SSLContext | None = None,
+        connection_kwargs: Mapping[str, Any] | None = None,
+        write_ssl_context: ssl.SSLContext | None = None,
+        write_connection_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
-        self.connection = RedisConnectionManager(host, port, db, ssl, ssl_cert_reqs)
+        self.connection = RedisConnectionManager(
+            host,
+            port,
+            db,
+            ssl,
+            ssl_cert_reqs,
+            ssl_context=ssl_context,
+            connection_kwargs=connection_kwargs,
+        )
 
         write_host = write_host or host
         write_port = write_port or port
-        self.write_connection = (
-            RedisConnectionManager(write_host, write_port, db, ssl, ssl_cert_reqs)
-            if (write_host != host or write_port != port)
-            else self.connection
+        effective_write_connection_kwargs = (
+            connection_kwargs
+            if write_connection_kwargs is None
+            else write_connection_kwargs
         )
+        effective_write_ssl_context = (
+            ssl_context if write_ssl_context is None else write_ssl_context
+        )
+
+        if (
+            write_host == host
+            and write_port == port
+            and effective_write_connection_kwargs == connection_kwargs
+            and effective_write_ssl_context is ssl_context
+        ):
+            self.write_connection = self.connection
+        else:
+            self.write_connection = RedisConnectionManager(
+                write_host,
+                write_port,
+                db,
+                ssl,
+                ssl_cert_reqs,
+                ssl_context=effective_write_ssl_context,
+                connection_kwargs=effective_write_connection_kwargs,
+            )
 
         self.storage = EntityStorage(self.connection)
         self.relationship = EntityRelationship(self.connection)

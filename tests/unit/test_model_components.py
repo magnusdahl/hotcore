@@ -9,6 +9,7 @@ These tests focus on testing the individual component classes that make up the M
 Each test uses explicit mocking to isolate the component being tested.
 """
 
+import ssl
 import uuid
 from unittest.mock import MagicMock, call, patch
 
@@ -42,6 +43,38 @@ class TestRedisConnectionManager:
                 retry_on_timeout=True,
                 health_check_interval=30,
             )
+
+    def test_initialization_with_ssl_context(self):
+        """RedisConnectionManager should wire up an SSL context when provided."""
+        with patch("redis.ConnectionPool") as mock_pool:
+            context = ssl.create_default_context()
+            RedisConnectionManager(host="secure", ssl_context=context)
+
+            kwargs = mock_pool.call_args.kwargs
+            assert kwargs["connection_class"].__name__ == "_ContextSSLConnection"
+            assert kwargs["ssl_context"] is context
+            assert kwargs["ssl_check_hostname"] is False
+
+    def test_initialization_with_custom_connection_kwargs(self):
+        """Custom connection kwargs should override defaults."""
+        with patch("redis.ConnectionPool") as mock_pool:
+            RedisConnectionManager(
+                host="custom",
+                connection_kwargs={
+                    "socket_timeout": 20,
+                    "retry_on_timeout": False,
+                    "ssl": True,
+                    "ssl_check_hostname": True,
+                },
+            )
+
+            kwargs = mock_pool.call_args.kwargs
+            assert kwargs["socket_timeout"] == 20
+            assert kwargs["retry_on_timeout"] is False
+            assert kwargs["connection_class"] is redis.SSLConnection
+            # ssl_check_hostname should respect explicit override rather than defaulting to False
+            assert kwargs["ssl_check_hostname"] is True
+            assert kwargs["ssl_cert_reqs"] == "required"
 
     def test_get_client(self):
         """Test that get_client returns a Redis client using the connection pool."""
@@ -422,3 +455,26 @@ def test_model_with_mocked_components(test_id):
             # Test find
             model.find(type="test")
             mock_search.find.assert_called_once_with(type="test")
+
+
+def test_model_uses_dedicated_write_connection_when_kwargs_differ():
+    """Model should create a separate write connection when kwargs diverge."""
+    with patch("hotcore.model.RedisConnectionManager") as mock_connection_manager_class:
+        mock_connection_manager_class.return_value = MagicMock()
+
+        from hotcore import Model
+
+        Model(
+            host="primary",
+            connection_kwargs={"socket_timeout": 15},
+            write_connection_kwargs={"socket_timeout": 30, "ssl": True},
+        )
+
+        assert mock_connection_manager_class.call_count == 2
+        read_call, write_call = mock_connection_manager_class.call_args_list
+
+        _, read_kwargs = read_call
+        _, write_kwargs = write_call
+
+        assert read_kwargs["connection_kwargs"] == {"socket_timeout": 15}
+        assert write_kwargs["connection_kwargs"] == {"socket_timeout": 30, "ssl": True}
